@@ -6,7 +6,6 @@ Implements optimized retrieval strategies for banking documents
 from functools import lru_cache
 from typing import List, Dict, Any
 
-from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_core.documents import Document
 
 from app.core.config import settings

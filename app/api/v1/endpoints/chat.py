@@ -5,12 +5,10 @@ Implements comprehensive error handling and request validation
 """
 import time
 from fastapi import APIRouter, HTTPException, status, Depends
-from typing import Dict, Any
 
 from app.schemas.chat import QuestionRequest, AnswerResponse, ErrorResponse
 from app.services.rag_services import RAGService
 from app.utils.logger import get_logger
-from app.core.config import settings
 
 logger = get_logger(__name__)
 router = APIRouter()

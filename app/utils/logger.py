@@ -6,8 +6,6 @@ Implements professional logging with contextual information
 import structlog
 import logging
 import sys
-from typing import Any, Dict
-from pathlib import Path
 
 from app.core.config import settings
 

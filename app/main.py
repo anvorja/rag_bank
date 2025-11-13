@@ -6,6 +6,9 @@ Clean Architecture Implementation for Bank BorjaM RAG System
 import warnings
 from pathlib import Path
 import sys
+from contextlib import asynccontextmanager
+
+import uvicorn
 
 # Suppress warnings for cleaner logs
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -25,21 +28,48 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+
+    # Startup logic
+    logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+
+    # Check vectorstore exists
+    if not settings.VECTORSTORE_PATH.exists() or not any(settings.VECTORSTORE_PATH.iterdir()):
+        logger.warning("Vectorstore not found. Run: python scripts/rebuild_vectorstore.py")
+
+    # Verify Ollama connectivity in local mode
+    if settings.MODE == "local":
+        try:
+            from app.rag.llm import get_llm
+            get_llm()
+            logger.info("Ollama LLM connected successfully")
+        except Exception as e:
+            logger.error(f"Ollama connection failed: {e}")
+            logger.warning("API will start but RAG will not work. Ensure 'ollama serve' is running.")
+
+    yield
+
+    # Shutdown logic
+    logger.info(f"Shutting down {settings.PROJECT_NAME}")
+
+
 def create_application() -> FastAPI:
     """
     Application factory pattern - Best practice for FastAPI
     Implements Dependency Injection and Inversion of Control
     """
-    app = FastAPI(
+    fastapi_app = FastAPI(
         title=settings.PROJECT_NAME,
-        description="Asistente virtual RAG para atención bancaria con privacidad local",
+        description="Asistente virtual RAG para atención bancaria.",
         version=settings.VERSION,
         docs_url="/docs" if settings.ENABLE_DOCS else None,
-        redoc_url="/redoc" if settings.ENABLE_DOCS else None
+        redoc_url="/redoc" if settings.ENABLE_DOCS else None,
+        lifespan=lifespan
     )
 
     # CORS Configuration
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
         allow_credentials=True,
@@ -49,10 +79,10 @@ def create_application() -> FastAPI:
     )
 
     # Include API router
-    app.include_router(v1_router, prefix=settings.API_V1_STR)
+    fastapi_app.include_router(v1_router, prefix=settings.API_V1_STR)
 
     # Health check endpoint at root
-    @app.get("/", tags=["health"])
+    @fastapi_app.get("/", tags=["health"])
     async def root():
         return {
             "message": f"{settings.PROJECT_NAME} - {settings.ENVIRONMENT} Environment",
@@ -62,39 +92,11 @@ def create_application() -> FastAPI:
             "docs": "/docs" if settings.ENABLE_DOCS else "disabled"
         }
 
-    @app.on_event("startup")
-    async def startup_event():
-        """Initialization tasks on startup"""
-        logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+    return fastapi_app
 
-        # Check vectorstore exists
-        if not settings.VECTORSTORE_PATH.exists() or not any(settings.VECTORSTORE_PATH.iterdir()):
-            logger.warning("Vectorstore not found. Run: python scripts/rebuild_vectorstore.py")
-
-        # Verify Ollama connectivity in local mode
-        if settings.MODE == "local":
-            try:
-                from app.rag.llm import get_llm
-                get_llm()
-                logger.info("Ollama LLM connected successfully")
-            except Exception as e:
-                logger.error(f"Ollama connection failed: {e}")
-                logger.warning("API will start but RAG will not work. Ensure 'ollama serve' is running.")
-
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        """Cleanup tasks on shutdown"""
-        logger.info(f"Shutting down {settings.PROJECT_NAME}")
-
-    return app
-
-
-# Create the application instance
 app = create_application()
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(
         "app.main:app",
         host=settings.HOST,

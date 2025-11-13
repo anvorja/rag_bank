@@ -3,11 +3,9 @@
 Vector Store Management and Abstraction Layer
 Implements Repository Pattern for vector operations
 """
-from pathlib import Path
 from functools import lru_cache
 import shutil
 from typing import List, Optional
-import numpy as np
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document

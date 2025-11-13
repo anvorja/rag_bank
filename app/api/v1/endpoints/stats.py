@@ -4,7 +4,6 @@ Statistics Endpoint
 Provides comprehensive system metrics and analytics
 """
 from fastapi import APIRouter, HTTPException, status
-from typing import Dict, Any
 import json
 from pathlib import Path
 
