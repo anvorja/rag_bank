@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b79686e0-89d9-47ef-b572-4590d0e91998" name="Changes" comment="" />
+    <list default="true" id="b79686e0-89d9-47ef-b572-4590d0e91998" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vectorstore/0f0e72fa-f981-449f-af4a-ccdb47130b4e/data_level0.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vectorstore/0f0e72fa-f981-449f-af4a-ccdb47130b4e/header.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vectorstore/0f0e72fa-f981-449f-af4a-ccdb47130b4e/length.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vectorstore/0f0e72fa-f981-449f-af4a-ccdb47130b4e/link_lists.bin" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vectorstore/chroma.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/vectorstore/chroma.sqlite3" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

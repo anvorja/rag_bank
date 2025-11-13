@@ -210,3 +210,5 @@ __marimo__/
 venv2/
 venv*/
 **/venv*/
+**/backup_project_files_script.sh*
+**/backup_project_files(python)_script.sh*
