@@ -1,31 +1,32 @@
+# ================================
+# IMPORTS
+# ================================
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from langchain_community.document_loaders import UnstructuredMarkdownLoader
-from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_chroma import Chroma
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
-import os
 from pydantic import BaseModel
-from dotenv import load_dotenv
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+import os
+import json
+from pathlib import Path
+from functools import lru_cache  # Añadido para caching
+
+# Configuración
+from config.settings import settings
+from rag.llm import get_llm
+from rag.vectorstore import get_vectorstore
+from rag.embeddings import get_embeddings
+
+# LangChain
+from langchain_core.prompts import ChatPromptTemplate
+import structlog
+
 
 # ================================
-# CONFIGURACIÓN
+# LOGGING CONFIGURACIÓN
 # ================================
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY no está definida en las variables de entorno")
-
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-
-DOCS_FOLDER = "./docs"  # Carpeta para Markdown y PDFs
-VECTORSTORE_PATH = "./vectorstore"
-COLLECTION_NAME = "banco_rag"
+log = structlog.get_logger()
+os.makedirs(Path(settings.LOGS_PATH).parent, exist_ok=True)
 
 
 # ================================
@@ -33,9 +34,9 @@ COLLECTION_NAME = "banco_rag"
 # ================================
 class QuestionRequest(BaseModel):
     question: str
-    conversation_history: List[Dict[str, str]] = []  # Historial de conversación
-    session_id: str = None  # ID de sesión para tracking
-    is_first_message: bool = True  # Indica si es el primer mensaje de la sesión
+    conversation_history: List[Dict[str, str]] = []
+    session_id: Optional[str] = None
+    is_first_message: bool = True
 
 
 class SourceInfo(BaseModel):
@@ -44,43 +45,68 @@ class SourceInfo(BaseModel):
     section: str
     subsection: str
     content: str
-    relevance_score: str
+    chunk_id: str
 
 
 class AnswerResponse(BaseModel):
     answer: str
     sources: List[SourceInfo]
-    metadata: Dict[str, Any] = {}
+    confidence: float  # Score de relevancia promedio
+    metadata: Dict[str, Any]
 
 
 # ================================
-# INICIALIZAR FASTAPI
+# INICIALIZAR APLICACIÓN
 # ================================
 app = FastAPI(
-    title="Banco de BorjaM - Chatbot RAG API",
-    description="API de chatbot con RAG para atención al cliente bancario",
-    version="1.0.0"
+    title="Bank BorjaM RAG - Local Edition",
+    description="Asistente virtual con RAG local para banca privada",
+    version="2.0.0"
 )
 
-# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-        "http://localhost:3000"
-    ],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
 
 
 # ================================
-# UTILIDADES
+# DEPENDENCIAS CON CACHE
 # ================================
-def get_greeting():
-    """Retorna saludo según la hora del día"""
+@lru_cache()
+def get_rag_components():
+    """Carga modelos una sola vez y los cachea"""
+    log.info("Inicializando componentes RAG...")
+    try:
+        vectorstore = get_vectorstore()
+        llm = get_llm()
+        embeddings = get_embeddings()
+
+        # Configurar retriever
+        retriever = vectorstore.as_retriever(
+            search_type="mmr",
+            search_kwargs={
+                "k": settings.RETRIEVER_K,
+                "fetch_k": settings.RETRIEVER_FETCH_K,
+                "lambda_mult": settings.LAMBDA_MULT
+            }
+        )
+
+        log.info("✓ Componentes cargados exitosamente")
+        return vectorstore, llm, retriever
+    except Exception as e:
+        log.error(f"Error inicializando RAG: {e}")
+        raise RuntimeError(f"Fallo inicialización: {e}")
+
+
+# ================================
+# FUNCIONES UTILITARIAS
+# ================================
+def get_greeting() -> str:
+    """Saludo contextual por hora"""
     hour = datetime.now().hour
     if 5 <= hour < 12:
         return "¡Buenos días!"
@@ -91,173 +117,119 @@ def get_greeting():
 
 
 def format_conversation_history(history: List[Dict[str, str]]) -> str:
-    """Formatea el historial de conversación para el prompt"""
-    if not history or len(history) == 0:
+    """Formatea historial para el prompt"""
+    if not history:
         return "Esta es la primera pregunta de la conversación."
 
-    formatted_lines = []
-    for msg in history:
-        role = "Usuario" if msg.get("role") == "user" else "Asistente"
-        content = msg.get("content", "")
-        formatted_lines.append(f"{role}: {content}")
-
-    return "\n".join(formatted_lines)
+    return "\n".join([
+        f"{'Usuario' if msg['role'] == 'user' else 'Asistente'}: {msg['content']}"
+        for msg in history
+    ])
 
 
-# ================================
-# CARGAR O CREAR VECTORSTORE
-# ================================
-def get_vectorstore():
-    """Carga el vectorstore existente o lanza error si no existe"""
-    if not os.path.exists(VECTORSTORE_PATH) or not os.listdir(VECTORSTORE_PATH):
-        raise Exception(
-            "Vectorstore no encontrado. "
-            "Por favor ejecuta 'python rebuild_vectorstore.py' primero."
-        )
-
-    print("Cargando vectorstore existente...")
-    embedding = OpenAIEmbeddings(model="text-embedding-3-small")
-    vectorstore = Chroma(
-        persist_directory=VECTORSTORE_PATH,
-        embedding_function=embedding,
-        collection_name=COLLECTION_NAME
-    )
-    print(f"✓ Vectorstore cargado con {vectorstore._collection.count()} chunks")
-    return vectorstore
-
-
-# ================================
-# INICIALIZAR RAG
-# ================================
-def init_rag():
-    """Inicializa el sistema RAG con cadena optimizada"""
-    vectorstore = get_vectorstore()
-
-    # Retriever con configuración optimizada
-    retriever = vectorstore.as_retriever(
-        search_type="mmr",  # Maximum Marginal Relevance para diversidad
-        search_kwargs={
-            "k": 5,  # Top 5 documentos más relevantes
-            "fetch_k": 20,  # Fetch 20 para MMR
-            "lambda_mult": 0.7  # Balance relevancia vs diversidad
+def log_conversation(session_id: str, question: str, answer: str, sources: List[Dict]):
+    """Log de conversaciones para análisis local"""
+    try:
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "session_id": session_id,
+            "question": question,
+            "answer": answer,
+            "sources": sources
         }
-    )
+        with open(settings.LOGS_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+    except Exception as e:
+        log.warning(f"No se pudo guardar log: {e}")
 
-    # LLM con mejor modelo
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.3,  # Un poco de creatividad pero consistente
-        max_tokens=800
-    )
 
-    # Prompt mejorado con historial conversacional
-    template = """Eres Sebastián, el asistente virtual de Bank BorjaM.
+# ================================
+# PROMPT OPTIMIZADO PARA BANCOS
+# ================================
+TEMPLATE = """Eres Sebastián, el asistente virtual de Bank BorjaM. Tu objetivo es ayudar a clientes con información precisa y segura.
 
-HISTORIAL DE LA CONVERSACIÓN:
+REGISTRO DE CONVERSACIÓN ACTUAL:
 {conversation_history}
 
-INSTRUCCIONES IMPORTANTES:
-1. Responde ÚNICAMENTE basándote en el contexto proporcionado
-2. USA el historial de conversación para entender referencias implícitas y mantener coherencia
-3. Si el usuario pregunta "¿cuánto cuesta?" después de hablar de un producto, infiere a qué se refiere
-4. Si el usuario dice "¿y eso?" o "¿qué más?" refiriéndose a algo anterior, usa el contexto del historial
-5. Mantén coherencia con tus respuestas anteriores en esta conversación
-6. Si la información no está en el contexto, indica claramente: "No encuentro esa información en mi base de conocimientos. Te recomiendo contactar directamente con..."
-7. Sé profesional pero cercano y empático
-8. Proporciona información completa y estructurada
-9. NUNCA inventes información, tasas de interés, requisitos o procedimientos
-10. Para consultas sobre cuentas personales o transacciones, deriva a canales seguros
-
-CONTEXTO RELEVANTE DE LA BASE DE CONOCIMIENTOS:
+CONTEXTO DOCUMENTAL RELEVANTE (últimos 3 mensajes):
 {context}
 
-PREGUNTA ACTUAL DEL CLIENTE:
+PREGUNTA DEL CLIENTE:
 {question}
 
-RESPUESTA (como Sebastián, asistente de Bank BorjaM):"""
+INSTRUCCIONES CRÍTICAS:
+1. Responde EXCLUSIVAMENTE con información del contexto documental
+2. Para datos sensibles (saldo, números de cuenta), DERIVA: "Para tu seguridad, te recomiendo validar ingresando a tu portal o llamando al 01 8000 515 050"
+3. Si no encuentras información específica, responde: "No tengo esa información en mis documentos. Te sugiero contactar a un asesor en 01 8000 515 050"
+4. Sé breve pero completo. Usa listas y tablas cuando sea necesario
+5. NO inventes tasas, números de teléfono ni procedimientos
+6. Mantén un tono profesional y empático
+7. Responde en español colombiano
 
-    prompt = ChatPromptTemplate.from_template(template)
+RESPUESTA DE SEBASTIÁN:"""
 
-    def format_docs(docs):
-        """Formatea documentos con metadata"""
-        formatted = []
-        for i, doc in enumerate(docs, 1):
-            section = doc.metadata.get('seccion', 'General')
-            formatted.append(f"[Fuente {i} - {section}]\n{doc.page_content}")
-        return "\n\n---\n\n".join(formatted)
-
-    def rag_with_sources(
-            question: str,
-            is_first_message: bool = True,
-            conversation_history: List[Dict[str, str]] = None
-    ):
-        """Ejecuta RAG y retorna respuesta con fuentes y contexto conversacional"""
-
-        # Obtener documentos relevantes del vectorstore
-        docs = retriever.invoke(question)
-
-        # Formatear contexto de documentos
-        context = format_docs(docs)
-
-        # Formatear historial conversacional
-        history_text = format_conversation_history(conversation_history or [])
-
-        # Generar respuesta usando el LLM
-        response = llm.invoke(
-            prompt.format(
-                conversation_history=history_text,
-                context=context,
-                question=question
-            )
-        )
-
-        answer = response.content
-
-        # Solo agregar saludo si es el primer mensaje de la sesión
-        if is_first_message:
-            greeting = get_greeting()
-            # Verificar si ya tiene un saludo
-            has_greeting = any(
-                saludo in answer.lower()
-                for saludo in ["buenos días", "buenas tardes", "buenas noches", "hola"]
-            )
-
-            if not has_greeting:
-                answer = f"{greeting} Soy Sebastián, tu asistente virtual de Bank BorjaM. ¿En qué puedo ayudarte?\n\n{answer}"
-
-        # Formatear fuentes con metadata enriquecido
-        sources_info = []
-        for i, doc in enumerate(docs, 1):
-            source_name = doc.metadata.get('source', 'Documento')
-            section = doc.metadata.get('seccion', 'N/A')
-            subsection = doc.metadata.get('subseccion', 'N/A')
-
-            # Truncar contenido para preview
-            content_preview = doc.page_content
-            if len(content_preview) > 300:
-                content_preview = content_preview[:300] + "..."
-
-            sources_info.append({
-                "id": i,
-                "source": os.path.basename(source_name),
-                "section": section,
-                "subsection": subsection,
-                "content": content_preview,
-                "relevance_score": str(doc.metadata.get('relevance_score', 'N/A'))
-            })
-
-        return answer, sources_info, docs
-
-    return rag_with_sources
+prompt = ChatPromptTemplate.from_template(TEMPLATE)
 
 
-# Inicializar el sistema RAG al iniciar la aplicación
-try:
-    rag_system = init_rag()
-    print("✓ Sistema RAG inicializado correctamente")
-except Exception as e:
-    print(f"⚠ Error inicializando RAG: {e}")
-    rag_system = None
+# ================================
+# FUNCIÓN PRINCIPAL RAG
+# ================================
+def execute_rag(
+        question: str,
+        is_first_message: bool,
+        conversation_history: List[Dict[str, str]],
+        session_id: str
+) -> tuple:
+    """Ejecuta pipeline RAG completo"""
+    _, llm, retriever = get_rag_components()
+
+    # 1. Recuperar documentos relevantes
+    docs = retriever.invoke(question)
+
+    # 2. Calcular score de confianza
+    avg_score = sum(
+        doc.metadata.get('relevance_score', 0) for doc in docs
+    ) / len(docs) if docs else 0
+
+    # 3. Formatear contexto
+    context = "\n\n---\n\n".join([
+        f"[Fuente {i + 1} - {doc.metadata.get('sección', 'N/A')}]\n{doc.page_content}"
+        for i, doc in enumerate(docs)
+    ])
+
+    # 4. Formatear historial (solo últimos 3 mensajes para eficiencia)
+    recent_history = conversation_history[-3:] if len(conversation_history) > 3 else conversation_history
+    history_text = format_conversation_history(recent_history)
+
+    # 5. Generar respuesta
+    response = llm.invoke(prompt.format(
+        conversation_history=history_text,
+        context=context,
+        question=question
+    ))
+
+    answer = response.content
+
+    # 6. Agregar saludo si es primer mensaje
+    if is_first_message:
+        greeting = get_greeting()
+        if greeting.lower().split()[0] not in answer.lower():
+            answer = f"{greeting} Soy Sebastián, tu asistente de Bank BorjaM.\n\n{answer}"
+
+    # 7. Formatear fuentes
+    sources = [
+        {
+            "id": i + 1,
+            "source": doc.metadata.get('source', 'N/A'),
+            "section": doc.metadata.get('sección', 'N/A'),
+            "subsection": doc.metadata.get('subsección', 'N/A'),
+            "content": doc.page_content[:300] + "..." if len(doc.page_content) > 300 else doc.page_content,
+            "chunk_id": doc.metadata.get('chunk_id', 'N/A')
+        }
+        for i, doc in enumerate(docs)
+    ]
+
+    return answer, sources, avg_score, docs
 
 
 # ================================
@@ -265,172 +237,89 @@ except Exception as e:
 # ================================
 @app.get("/")
 async def root():
-    """Endpoint raíz con información de la API"""
     return {
-        "message": "Banco de BorjaM - Chatbot RAG API",
+        "message": "Bank BorjaM RAG API - Local Mode",
+        "mode": settings.MODE,
         "status": "running",
-        "version": "1.0.0",
-        "features": {
-            "conversational_context": True,
-            "session_management": True,
-            "rag_retrieval": True
-        },
-        "endpoints": {
-            "health": "/health",
-            "ask": "/ask (POST)",
-            "stats": "/stats"
-        }
+        "health": "/health"
     }
 
 
 @app.post("/ask", response_model=AnswerResponse)
 async def ask_question(request: QuestionRequest):
-    """Procesa una pregunta y retorna respuesta con fuentes"""
-    if not rag_system:
-        raise HTTPException(
-            status_code=503,
-            detail="Sistema RAG no disponible. Verifica que el vectorstore esté creado."
-        )
-
     try:
-        # Validar que la pregunta no esté vacía
-        if not request.question or not request.question.strip():
-            raise HTTPException(
-                status_code=400,
-                detail="La pregunta no puede estar vacía"
-            )
+        if not request.question.strip():
+            raise HTTPException(status_code=400, detail="Pregunta vacía")
 
-        # Ejecutar RAG con contexto conversacional
-        answer, sources, docs = rag_system(
+        # Ejecutar RAG
+        answer, sources, confidence, _ = execute_rag(
             question=request.question,
             is_first_message=request.is_first_message,
-            conversation_history=request.conversation_history
+            conversation_history=request.conversation_history,
+            session_id=request.session_id or "anon"
         )
 
-        # Preparar metadata de la respuesta
-        metadata = {
-            "timestamp": datetime.now().isoformat(),
-            "num_sources_used": len(sources),
-            "model": "gpt-4o-mini",
-            "retrieval_type": "mmr",
-            "is_first_message": request.is_first_message,
-            "session_id": request.session_id,
-            "conversation_length": len(request.conversation_history)
-        }
+        # Log para análisis
+        log_conversation(
+            session_id=request.session_id or f"anon_{datetime.now().timestamp()}",
+            question=request.question,
+            answer=answer,
+            sources=sources
+        )
 
         return AnswerResponse(
             answer=answer,
-            sources=sources,
-            metadata=metadata
+            sources=[SourceInfo(**src) for src in sources],
+            confidence=round(confidence, 2),
+            metadata={
+                "timestamp": datetime.now().isoformat(),
+                "session_id": request.session_id,
+                "mode": settings.MODE,
+                "model": settings.LOCAL_LLM_MODEL if settings.MODE == "local" else settings.CLOUD_LLM_MODEL
+            }
         )
 
     except HTTPException:
-        # Re-lanzar HTTPExceptions tal como están
         raise
     except Exception as e:
-        # Capturar cualquier otro error y retornar 500
-        print(f"Error procesando pregunta: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error procesando la pregunta: {str(e)}"
-        )
+        log.error(f"Error procesando pregunta: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del sistema")
 
 
 @app.get("/health")
 async def health_check():
-    """Verifica el estado del sistema"""
-    vectorstore_exists = os.path.exists(VECTORSTORE_PATH) and os.listdir(VECTORSTORE_PATH)
-
+    vectorstore, _, _ = get_rag_components()
     return {
-        "status": "healthy" if rag_system else "degraded",
-        "vectorstore_exists": vectorstore_exists,
-        "vectorstore_path": VECTORSTORE_PATH,
-        "rag_system_initialized": rag_system is not None,
-        "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0"
+        "status": "healthy",
+        "mode": settings.MODE,
+        "vectorstore_count": vectorstore._collection.count(),
+        "models": {
+            "embedding": settings.LOCAL_EMBEDDING_MODEL if settings.MODE == "local" else settings.OPENAI_EMBEDDING_MODEL,
+            "llm": settings.LOCAL_LLM_MODEL if settings.MODE == "local" else settings.CLOUD_LLM_MODEL
+        },
+        "timestamp": datetime.now().isoformat()
     }
 
 
 @app.get("/stats")
 async def get_stats():
-    """Retorna estadísticas del vectorstore"""
-    if not rag_system:
-        raise HTTPException(status_code=503, detail="Sistema RAG no disponible")
-
-    try:
-        vectorstore = get_vectorstore()
-        collection = vectorstore._collection
-
-        return {
-            "total_chunks": collection.count(),
-            "collection_name": COLLECTION_NAME,
-            "embedding_model": "text-embedding-3-small",
-            "llm_model": "gpt-4o-mini",
-            "vectorstore_path": VECTORSTORE_PATH,
-            "retrieval_method": "mmr",
-            "features": {
-                "conversational_context": True,
-                "session_tracking": True,
-                "contextual_greeting": True
-            }
+    vectorstore, _, _ = get_rag_components()
+    return {
+        "total_chunks": vectorstore._collection.count(),
+        "collection_name": "banco_rag",
+        "mode": settings.MODE,
+        "config": {
+            "retriever_k": settings.RETRIEVER_K,
+            "chunk_size": 800,
+            "chunk_overlap": 120
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    }
 
 
 # ================================
-# ENDPOINT DE DEBUG (OPCIONAL)
-# ================================
-@app.post("/debug/context")
-async def debug_context(request: QuestionRequest):
-    """
-    Endpoint de debug para ver cómo se procesa el contexto conversacional
-    SOLO PARA DESARROLLO - Eliminar en producción
-    """
-    if not rag_system:
-        raise HTTPException(status_code=503, detail="Sistema RAG no disponible")
-
-    try:
-        vectorstore = get_vectorstore()
-        retriever = vectorstore.as_retriever(
-            search_type="mmr",
-            search_kwargs={"k": 5, "fetch_k": 20, "lambda_mult": 0.7}
-        )
-
-        # Obtener documentos relevantes
-        docs = retriever.invoke(request.question)
-
-        # Formatear historial
-        history_text = format_conversation_history(request.conversation_history or [])
-
-        return {
-            "question": request.question,
-            "is_first_message": request.is_first_message,
-            "session_id": request.session_id,
-            "conversation_history": request.conversation_history,
-            "formatted_history": history_text,
-            "retrieved_documents": [
-                {
-                    "content": doc.page_content[:200] + "...",
-                    "metadata": doc.metadata
-                }
-                for doc in docs
-            ],
-            "num_docs_retrieved": len(docs)
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ================================
-# EJECUCIÓN
+# MAIN
 # ================================
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=8000,
-        log_level="info"
-    )
+    uvicorn.run(app, host="127.0.0.1", port=8000)
