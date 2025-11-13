@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.12 (bank_borjam)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (bank_borjam) (2)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (rag_bank)" project-jdk-type="Python SDK" />
 </project>
