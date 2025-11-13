@@ -16,7 +16,6 @@ class MessageHistory(BaseModel):
     timestamp: Optional[datetime] = Field(None, description="Message timestamp")
 
     @field_validator("content")
-    @classmethod
     def validate_content(cls, v):
         """Validate message content"""
         if not v.strip():
@@ -45,7 +44,6 @@ class QuestionRequest(BaseModel):
     )
     conversation_history: List[MessageHistory] = Field(
         default=[],
-        # FIXED: max_items -> max_length para listas
         max_length=20,
         description="Previous conversation messages for context"
     )
@@ -64,7 +62,6 @@ class QuestionRequest(BaseModel):
     )
 
     @field_validator("question")
-    @classmethod
     def validate_question(cls, v):
         """Validate and clean question"""
         if not v.strip():
@@ -88,7 +85,6 @@ class QuestionRequest(BaseModel):
         return cleaned
 
     @field_validator("conversation_history")
-    @classmethod
     def validate_conversation_history(cls, v):
         """Validate conversation history structure"""
         if not v:
@@ -104,7 +100,6 @@ class QuestionRequest(BaseModel):
         return v
 
     @model_validator(mode='before')
-    @classmethod
     def validate_session_consistency(cls, values):
         """Validate session-level consistency"""
         is_first = values.get("is_first_message", True)
@@ -146,7 +141,6 @@ class AnswerResponse(BaseModel):
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
     @field_validator("answer")
-    @classmethod
     def validate_answer(cls, v):
         """Validate answer content"""
         if not v.strip():
