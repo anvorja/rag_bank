@@ -1,4 +1,4 @@
-# app/core/__init__.py
+# app/config/__init__.py
 """
 Core Configuration Package
 """
