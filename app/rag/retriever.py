@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 from langchain_core.documents import Document
 
 from app.core.config import settings
-from app.rag.vectorstore import get_vectorstore
+from app.rag.vectorstore import get_vectorstore, get_vectorstore_stats
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -78,7 +78,8 @@ class OptimizedRetriever:
             logger.error(f"Retrieval failed: {e}")
             raise RuntimeError(f"Document retrieval failed: {e}")
 
-    def _post_process_documents(self, docs: List[Document], query: str) -> List[Document]:
+    @staticmethod
+    def _post_process_documents(docs: List[Document], query: str) -> List[Document]:
         """
         Post-process retrieved documents for better quality
 
@@ -143,13 +144,16 @@ class OptimizedRetriever:
 
     def get_retrieval_stats(self) -> Dict[str, Any]:
         """Get retrieval configuration statistics"""
+
+        vectorstore_stats = get_vectorstore_stats()
+
         return {
             "k": self.k,
             "fetch_k": self.fetch_k,
             "lambda_mult": self.lambda_mult,
             "search_type": "mmr",
             "vectorstore_stats": {
-                "total_docs": self.vectorstore._collection.count() if self.vectorstore._collection else 0
+                "total_docs": vectorstore_stats
             }
         }
 

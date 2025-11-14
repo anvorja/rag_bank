@@ -131,9 +131,8 @@ class VectorStoreManager:
             logger.error(f"Failed to add documents: {e}")
             return False
 
-    # noinspection PyProtectedMember
-    @staticmethod
-    def _validate_vectorstore(vectorstore: Chroma) -> bool:
+    # noinspection PyMethodMayBeStatic,PyProtectedMember
+    def _validate_vectorstore(self, vectorstore: Chroma) -> bool:
         """Validate vectorstore integrity"""
         try:
             if not hasattr(vectorstore, '_collection') or not vectorstore._collection:

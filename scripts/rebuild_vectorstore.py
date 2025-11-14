@@ -21,7 +21,7 @@ from langchain_community.vectorstores.utils import filter_complex_metadata
 
 from app.core.config import settings
 from app.rag.embeddings import get_embeddings, get_embedding_dimension
-from app.rag.vectorstore import delete_vectorstore, create_vectorstore_from_documents
+from app.rag.vectorstore import delete_vectorstore, create_vectorstore_from_documents, get_vectorstore_stats
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -83,11 +83,12 @@ class DocumentProcessor:
         # FIXED: Serializar metadatos complejos a strings
         metadata["banking_keywords"] = json.dumps(found_keywords, ensure_ascii=False)
         metadata["content_type"] = self._classify_content_type(content_lower)
-        metadata["priority"] = str(self._calculate_priority(content, headers))  # Convertir a string
+        metadata["priority"] = str(self._calculate_priority(content, headers))
 
         return metadata
 
-    def _classify_content_type(self, content: str) -> str:
+    @staticmethod
+    def _classify_content_type(content: str) -> str:
         """Classify document content type"""
         if any(word in content for word in ["requisito", "documento", "necesita"]):
             return "requirements"
@@ -100,7 +101,8 @@ class DocumentProcessor:
         else:
             return "general"
 
-    def _calculate_priority(self, content: str, headers: Dict[str, str]) -> int:
+    @staticmethod
+    def _calculate_priority(content: str, headers: Dict[str, str]) -> int:
         """Calculate content priority (1-5, where 5 is highest)"""
         priority = 3  # Base priority
 
@@ -171,14 +173,14 @@ class DocumentProcessor:
                     for j, chunk_text in enumerate(sub_chunks):
                         chunk_metadata = metadata.copy()
                         chunk_metadata["chunk_id"] = f"{file_path.stem}_{i}_{j}"
-                        chunk_metadata["chunk_index"] = str(j)  # FIXED: Convertir a string
+                        chunk_metadata["chunk_index"] = str(j)
                         final_chunks.append(Document(
                             page_content=chunk_text,
                             metadata=chunk_metadata
                         ))
                 else:
                     metadata["chunk_id"] = f"{file_path.stem}_{i}"
-                    metadata["chunk_index"] = "0"  # FIXED: Convertir a string
+                    metadata["chunk_index"] = "0"
                     final_chunks.append(Document(
                         page_content=doc.page_content,
                         metadata=metadata
@@ -197,7 +199,7 @@ def build_vectorstore(force: bool = False, verbose: bool = False) -> bool:
 
     Args:
         force: Force rebuild even if vectorstore exists
-        verbose: Enable verbose logging
+        verbose: Enable verbose logging (CORREGIDO: ahora se usa)
 
     Returns:
         True if successful, False otherwise
@@ -231,10 +233,19 @@ def build_vectorstore(force: bool = False, verbose: bool = False) -> bool:
 
         logger.info(f"Original docs: {len(docs)}, Filtered docs: {len(filtered_docs)}")
 
-        # Validate embeddings
+        # Validate embeddings (CORREGIDO: ahora se usa la variable 'embeddings')
         logger.info("Step 3: Validating embeddings...")
         embeddings = get_embeddings()
         embedding_dim = get_embedding_dimension()
+
+        # Usar embeddings para una prueba simple si verbose está activado
+        if verbose:
+            try:
+                test_embedding = embeddings.embed_query("test document")
+                logger.info(f"Embedding test successful - dimension: {len(test_embedding)}")
+            except Exception as e:
+                logger.warning(f"Embedding test failed: {e}")
+
         logger.info(f"Using embeddings with dimension: {embedding_dim}")
 
         # Delete existing vectorstore if force rebuild
@@ -244,10 +255,11 @@ def build_vectorstore(force: bool = False, verbose: bool = False) -> bool:
 
         # Create vectorstore
         logger.info("Step 5: Creating vectorstore...")
-        vectorstore = create_vectorstore_from_documents(filtered_docs)
+        create_vectorstore_from_documents(filtered_docs)
 
-        # Validate creation
-        collection_count = vectorstore._collection.count() if vectorstore._collection else 0
+        stats = get_vectorstore_stats()
+        collection_count = stats.get("count", 0)
+
         if collection_count != len(filtered_docs):
             logger.warning(f"Document count mismatch: expected {len(filtered_docs)}, got {collection_count}")
 
@@ -302,7 +314,6 @@ def inspect_vectorstore() -> bool:
             logger.error("Vectorstore does not exist")
             return False
 
-        from app.rag.vectorstore import get_vectorstore_stats
         stats = get_vectorstore_stats()
 
         if stats["status"] != "healthy":
