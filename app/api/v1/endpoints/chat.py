@@ -39,6 +39,7 @@ def get_rag_service() -> RAGService:
     - Validación de seguridad de contenido
 
     Limitaciones:
+    - Texto mínimo: 1 carácter
     - Pregunta máxima: 2000 caracteres
     - Historial máximo: 20 mensajes
     - Tiempo límite: 30 segundos
@@ -72,11 +73,10 @@ async def ask_question(
             is_first_message=request.is_first_message
         )
 
-        # Additional validation
-        if len(request.question.strip()) < 3:
+        if len(request.question.strip()) < 1:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="La pregunta debe tener al menos 3 caracteres"
+                detail="La pregunta debe tener al menos 1 carácter"
             )
 
         # Check for rate limiting (basic implementation)
