@@ -32,13 +32,13 @@ def get_rag_service() -> RAGService:
     description="""
     Endpoint principal para procesar preguntas bancarias usando Retrieval-Augmented Generation.
 
-    **Características:**
+    Características:
     - Búsqueda semántica en documentos bancarios
     - Respuestas contextuales basadas en información oficial
     - Soporte para conversaciones multi-turno
     - Validación de seguridad de contenido
 
-    **Limitaciones:**
+    Limitaciones:
     - Pregunta máxima: 2000 caracteres
     - Historial máximo: 20 mensajes
     - Tiempo límite: 30 segundos
@@ -88,7 +88,6 @@ async def ask_question(
             conversation_history=request.conversation_history,
             session_id=request.session_id,
             is_first_message=request.is_first_message,
-            user_metadata=request.user_metadata
         )
 
         processing_time = (time.time() - start_time) * 1000
@@ -141,7 +140,7 @@ async def ask_question(
     summary="Streaming de respuestas (implementación futura)",
     description="Endpoint para recibir respuestas en streaming. Actualmente no implementado."
 )
-async def ask_question_stream(request: QuestionRequest):
+async def ask_question_stream():
     """
     Endpoint placeholder para streaming de respuestas
     Implementación futura para mejor experiencia de usuario
