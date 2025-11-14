@@ -6,7 +6,6 @@ Implements Repository Pattern for vector operations
 from functools import lru_cache
 import shutil
 from typing import List, Optional
-
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
@@ -102,6 +101,7 @@ class VectorStoreManager:
             if not vectorstore:
                 return {"status": "not_found", "count": 0}
 
+            # noinspection PyProtectedMember
             collection = vectorstore._collection
             count = collection.count() if collection else 0
 
@@ -131,13 +131,15 @@ class VectorStoreManager:
             logger.error(f"Failed to add documents: {e}")
             return False
 
-    def _validate_vectorstore(self, vectorstore: Chroma) -> bool:
+    # noinspection PyProtectedMember
+    @staticmethod
+    def _validate_vectorstore(vectorstore: Chroma) -> bool:
         """Validate vectorstore integrity"""
         try:
-            collection = vectorstore._collection
-            if not collection:
+            if not hasattr(vectorstore, '_collection') or not vectorstore._collection:
                 return False
 
+            collection = vectorstore._collection
             count = collection.count()
             if count == 0:
                 logger.warning("Vectorstore is empty")
@@ -150,18 +152,16 @@ class VectorStoreManager:
             try:
                 sample_docs = collection.peek(limit=1)
 
-                # FIXED: Evaluación segura de arrays de NumPy
                 has_embeddings = (
-                        sample_docs is not None and
-                        'embeddings' in sample_docs and
-                        sample_docs['embeddings'] is not None and
-                        len(sample_docs['embeddings']) > 0
+                    sample_docs is not None and
+                    'embeddings' in sample_docs and
+                    sample_docs['embeddings'] is not None and
+                    len(sample_docs['embeddings']) > 0
                 )
 
                 if has_embeddings:
                     embedding_sample = sample_docs['embeddings'][0]
 
-                    # Manejar arrays de NumPy correctamente
                     if hasattr(embedding_sample, '__len__'):
                         actual_dim = len(embedding_sample)
                     else:
@@ -178,7 +178,6 @@ class VectorStoreManager:
 
             except Exception as e:
                 logger.warning(f"Could not validate embedding dimension: {e}")
-                # No fallar la validación completa por esto
                 pass
 
             logger.info(f"Vectorstore validation successful", count=count)
