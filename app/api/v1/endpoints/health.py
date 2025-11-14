@@ -5,6 +5,8 @@ Implements comprehensive system health monitoring
 """
 import time
 from datetime import datetime
+from typing import Dict, Literal
+
 from fastapi import APIRouter, HTTPException, status
 
 from app.core.config import settings
@@ -25,17 +27,17 @@ router = APIRouter()
     description="""
     Verifica el estado de todos los componentes críticos del sistema RAG:
 
-    **Componentes verificados:**
+    Componentes verificados:
     - Vectorstore (existencia, integridad, dimensiones)
     - Modelo de embeddings (conectividad, dimensiones)
     - LLM (conectividad, generación)
     - Configuración del sistema
     - Documentos fuente
 
-    **Estados posibles:**
-    - `healthy`: Todos los componentes funcionando correctamente
-    - `degraded`: Algunos componentes tienen problemas menores
-    - `unhealthy`: Componentes críticos fallan
+    Estados posibles:
+    - healthy: Todos los componentes funcionando correctamente
+    - degraded: Algunos componentes tienen problemas menores
+    - unhealthy: Componentes críticos fallan
     """
 )
 async def health_check():
@@ -46,8 +48,8 @@ async def health_check():
         HealthResponse con estado general y detalle por componente
     """
     start_time = time.time()
-    overall_status = "healthy"
-    components = {}
+    overall_status: Literal["healthy", "degraded", "unhealthy"] = "healthy"
+    components: Dict[str, ComponentStatus] = {}
     action_required = None
 
     try:
@@ -115,7 +117,11 @@ async def health_check():
             environment=settings.ENVIRONMENT,
             mode=settings.MODE,
             timestamp=datetime.now(),
-            components={"error": ComponentStatus(status="error", message=str(e))},
+            components={"error": ComponentStatus(
+                status="error",
+                message=str(e),
+                details={"exception_type": type(e).__name__}
+            )},
             action_required="System health check failed. Check logs immediately."
         )
 
@@ -168,7 +174,8 @@ async def _check_vectorstore() -> ComponentStatus:
     except Exception as e:
         return ComponentStatus(
             status="error",
-            message=f"Vectorstore check failed: {str(e)}"
+            message=f"Vectorstore check failed: {str(e)}",
+            details={"exception_type": type(e).__name__}
         )
 
 
@@ -179,7 +186,8 @@ async def _check_embeddings() -> ComponentStatus:
         if not test_embeddings():
             return ComponentStatus(
                 status="error",
-                message="Embeddings test failed"
+                message="Embeddings test failed",
+                details={"test_type": "functionality"}
             )
 
         dimension = get_embedding_dimension()
@@ -202,7 +210,8 @@ async def _check_embeddings() -> ComponentStatus:
     except Exception as e:
         return ComponentStatus(
             status="error",
-            message=f"Embeddings check failed: {str(e)}"
+            message=f"Embeddings check failed: {str(e)}",
+            details={"exception_type": type(e).__name__}
         )
 
 
@@ -231,7 +240,8 @@ async def _check_llm() -> ComponentStatus:
         if not test_llm_generation():
             return ComponentStatus(
                 status="warning",
-                message="LLM connected but generation test failed"
+                message="LLM connected but generation test failed",
+                details={"test_type": "generation"}
             )
 
         return ComponentStatus(
@@ -250,7 +260,8 @@ async def _check_llm() -> ComponentStatus:
     except Exception as e:
         return ComponentStatus(
             status="error",
-            message=f"LLM check failed: {str(e)}"
+            message=f"LLM check failed: {str(e)}",
+            details={"exception_type": type(e).__name__}
         )
 
 
@@ -277,7 +288,8 @@ async def _check_configuration() -> ComponentStatus:
         if issues:
             return ComponentStatus(
                 status="error",
-                message=f"Configuration issues: {', '.join(issues)}"
+                message=f"Configuration issues: {', '.join(issues)}",
+                details={"issues": issues}
             )
 
         return ComponentStatus(
@@ -294,7 +306,8 @@ async def _check_configuration() -> ComponentStatus:
     except Exception as e:
         return ComponentStatus(
             status="error",
-            message=f"Configuration check failed: {str(e)}"
+            message=f"Configuration check failed: {str(e)}",
+            details={"exception_type": type(e).__name__}
         )
 
 
@@ -333,7 +346,8 @@ async def _check_documentation() -> ComponentStatus:
     except Exception as e:
         return ComponentStatus(
             status="error",
-            message=f"Documentation check failed: {str(e)}"
+            message=f"Documentation check failed: {str(e)}",
+            details={"exception_type": type(e).__name__}
         )
 
 
@@ -344,7 +358,7 @@ async def _check_documentation() -> ComponentStatus:
 async def quick_health_check():
     """
     Verificación rápida de salud sin tests exhaustivos
-    Útil para los load balancers y monitoreo básico
+    Útil para los - Load balancers - y monitoreo básico
     """
     try:
         # Quick checks only
