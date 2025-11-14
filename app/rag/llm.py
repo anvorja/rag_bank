@@ -118,17 +118,21 @@ class CloudLLMProvider(LLMProvider):
             raise RuntimeError(f"OpenAI LLM initialization failed: {e}")
 
     def validate_connection(self) -> bool:
-        """Validate OpenAI API connection"""
+        """Validate OpenAI API connection with response checking"""
         try:
             llm = self.get_llm()
-            # Simple test to validate API key and model
             test_response = llm.invoke("Test message")
+
+            # Validar que la respuesta tenga contenido
+            if not test_response or not test_response.content:
+                logger.error("OpenAI returned empty response")
+                return False
+
             logger.info(f"OpenAI connection validated", model=self.model_name)
             return True
         except Exception as e:
             logger.error(f"OpenAI validation failed: {e}")
             return False
-
 
 class LLMFactory:
     """Factory class for creating LLM providers"""
