@@ -198,7 +198,7 @@ def build_vectorstore_fixed(force: bool = False, verbose: bool = False) -> bool:
 
 def main():
     """Main CLI interface"""
-    parser = argparse.ArgumentParser(description="Build fixed Bank BorjaM RAG vectorstore")
+    parser = argparse.ArgumentParser(description="Build fixed Borgian Bank RAG vectorstore")
     parser.add_argument("--force", action="store_true", help="Force rebuild even if exists")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     

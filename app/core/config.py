@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     """
 
     # === PROJECT INFO ===
-    PROJECT_NAME: str = "Bank BorjaM RAG API"
+    PROJECT_NAME: str = "Borgian Bank RAG API"
     VERSION: str = "2.0.0"
     ENVIRONMENT: Literal["development", "production", "testing"] = "development"
 
