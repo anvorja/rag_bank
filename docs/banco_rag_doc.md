@@ -1,4 +1,4 @@
-# Bank BorjaM
+# Borgian Bank
 
 # SECCIÓN 1: PRODUCTOS DE AHORRO Y CUENTAS
 
@@ -31,8 +31,8 @@
 
 2. **Transferencias sin costo**
    
-   - Ilimitadas entre cuentas del Grupo BorjaM
-   - Incluye: NuBank, Nequi, Falabella, Banco BorjaM, Banco de Bogotá, Banco Popular, AV Villas
+   - Ilimitadas entre cuentas del Grupo Borgian Bank
+   - Incluye: NuBank, Nequi, Falabella, Banco Borgian Bank, Banco de Bogotá, Banco Popular, AV Villas
    - Disponibles 24/7 a través de canales digitales
 
 3. **Entrega de tarjeta débito**
@@ -78,7 +78,7 @@ R: Solo puedes tener una cuenta digital por tipo de producto (una cuenta de ahor
 | Beneficio                      | Descripción                      |
 | ------------------------------ | -------------------------------- |
 | Cuota de manejo tarjeta débito | 50% de descuento                 |
-| Retiros gratis mensuales       | 5 retiros en cajeros red BorjaM  |
+| Retiros gratis mensuales       | 5 retiros en cajeros red Borgian  |
 | Acceso canales digitales       | Portal transaccional y app móvil |
 
 #### Nómina Oro
@@ -88,7 +88,7 @@ R: Solo puedes tener una cuenta digital por tipo de producto (una cuenta de ahor
 | Beneficio                      | Descripción                       |
 | ------------------------------ | --------------------------------- |
 | Cuota de manejo tarjeta débito | Sin costo                         |
-| Retiros gratis mensuales       | 7 retiros en cajeros red BorjaM   |
+| Retiros gratis mensuales       | 7 retiros en cajeros red Borgian   |
 | Acceso canales digitales       | Portal transaccional y app móvil  |
 | Beneficios adicionales         | Acceso a productos preferenciales |
 
@@ -99,7 +99,7 @@ R: Solo puedes tener una cuenta digital por tipo de producto (una cuenta de ahor
 | Beneficio                      | Descripción                                     |
 | ------------------------------ | ----------------------------------------------- |
 | Cuota de manejo tarjeta débito | Sin costo                                       |
-| Retiros en cajeros             | Ilimitados y gratuitos en red BorjaM            |
+| Retiros en cajeros             | Ilimitados y gratuitos en red Borgian            |
 | **Exoneración GMF (4x1000)**   | Sin cobro de gravamen a movimientos financieros |
 | Preventas y eventos exclusivos | Acceso prioritario                              |
 | Seguro incluido                | Desempleo o vida (según plan)                   |
@@ -455,7 +455,7 @@ Si el cliente **no solicita** la cancelación en la fecha de vencimiento:
 **Paso 4:** Elegir forma de entrega del dinero:
 
 - **Cheque de gerencia** (sin costo)
-- **Abono a cuenta Banco BorjaM** (sin costo)
+- **Abono a cuenta Banco Borgian** (sin costo)
 
 ### Documentación Requerida para Apertura
 
@@ -509,11 +509,11 @@ Si el cliente **no solicita** la cancelación en la fecha de vencimiento:
 ## 3.2 Fondos de Inversión Colectiva (FIC)
 
 **Categoría:** `inversiones_fondos`  
-**Palabras clave:** FIC, fondo de inversión, diversificación, Fiduciaria BorjaM,  
+**Palabras clave:** FIC, fondo de inversión, diversificación, Fiduciaria Borgian,  
 **Segmento:** Personas naturales y jurídicas  
-**Administrador:** Fiduciaria BorjaM
+**Administrador:** Fiduciaria Borgian
 
-### FIC BorjaM - Características Principales
+### FIC Borgian - Características Principales
 
 | Aspecto                  | Detalle                                |
 | ------------------------ | -------------------------------------- |
@@ -525,7 +525,7 @@ Si el cliente **no solicita** la cancelación en la fecha de vencimiento:
 
 ### Composición del Portafolio
 
-El FIC BorjaM invierte en instrumentos diversificados:
+El FIC Borgian invierte en instrumentos diversificados:
 
 - **CDTs** de entidades financieras vigiladas
 - **TES** (Títulos de Deuda Pública)
@@ -635,22 +635,22 @@ El banco ofrece acompañamiento para inversiones en el exterior:
 
 ### Canales de Pago Disponibles
 
-| Canal                           | Descripción                                | Disponibilidad              |
-| ------------------------------- | ------------------------------------------ | --------------------------- |
-| **Portal Transaccional**        | Pagos, transferencias y consultas en línea | 24/7                        |
-| **Centro de Pagos PSE**         | Débito desde cualquier cuenta bancaria     | 24/7                        |
-| **Oficinas físicas**            | Banco de BorjaM y bancos del Grupo BorjaM  | Horario laboral             |
-| **BorjaMPay Center**            | Pago desde múltiples entidades             | 24/7                        |
-| **Audio Línea de BorjaM (ALB)** | Pago telefónico automatizado               | 24/7                        |
-| **Corresponsales bancarios**    | Red de comercios autorizados               | Horario del establecimiento |
-| **Débito automático**           | Pago recurrente automático                 | Automático cada mes         |
+| Canal                               | Descripción                                | Disponibilidad              |
+|-------------------------------------|--------------------------------------------| --------------------------- |
+| **Portal Transaccional**            | Pagos, transferencias y consultas en línea | 24/7                        |
+| **Centro de Pagos PSE**             | Débito desde cualquier cuenta bancaria     | 24/7                        |
+| **Oficinas físicas**                | Borgian Bank y bancos del Grupo Borgian | Horario laboral             |
+| **BorgianPay Center**              | Pago desde múltiples entidades             | 24/7                        |
+| **Audio Línea de Borgian (ALB)** | Pago telefónico automatizado               | 24/7                        |
+| **Corresponsales bancarios**        | Red de comercios autorizados               | Horario del establecimiento |
+| **Débito automático**               | Pago recurrente automático                 | Automático cada mes         |
 
 ### Pago desde Otras Entidades
 
-✓ BorjaMPay Center acepta pagos desde:
+✓ BorgianPay Center acepta pagos desde:
 
-- Cuentas de BorjaM
-- Bancos del Grupo BorjaM (NuBank, Nequi, Falabella, Bogotá, Popular, AV Villas)
+- Cuentas de Borgian Bank
+- Bancos del Grupo Borgian (NuBank, Nequi, Falabella, Bogotá, Popular, AV Villas)
 - Otras entidades financieras colombianas
 
 ✓ Centro de Pagos PSE:
@@ -661,7 +661,7 @@ El banco ofrece acompañamiento para inversiones en el exterior:
 ### Proceso de Pago con PSE (Botón en Extracto Digital)
 
 **Paso 1:** Acceder al portal transaccional del banco  
-**Paso 2:** El sistema redirige a BorjaMPay Center  
+**Paso 2:** El sistema redirige a BorgianPay Center  
 **Paso 3:** Diligenciar información requerida:
 
 - Número de obligación o número de tarjeta
@@ -724,7 +724,7 @@ Opciones disponibles:
 
 **Canales disponibles:**
 
-- Cajeros automáticos red BorjaM
+- Cajeros automáticos red Borgian
 - Transferencia directa a cuenta de ahorros o corriente
 - Solicitud en oficinas físicas
 
@@ -928,7 +928,7 @@ Opciones disponibles:
 ### Características
 
 - Vinculada directamente a cuenta de ahorros o corriente
-- Retiros en cajeros automáticos red BorjaM
+- Retiros en cajeros automáticos red Borgian
 - Compras en establecimientos comerciales nacionales e internacionales
 - Compras en línea con código de seguridad
 - Sin cuota de manejo (según tipo de cuenta)
@@ -936,7 +936,7 @@ Opciones disponibles:
 ### Funcionalidades
 
 ✓ Consulta de saldos en cajeros  
-✓ Transferencias en cajeros BorjaM  
+✓ Transferencias en cajeros Borgian  
 ✓ Pago de servicios públicos  
 ✓ Recargas de celular  
 ✓ Retiros sin tarjeta mediante OTP  
@@ -1107,7 +1107,7 @@ Opciones disponibles:
 
 # SECCIÓN 6: CANALES DE ATENCIÓN
 
-## 6.1 Audio Línea de BorjaM (ALB)
+## 6.1 Audio Línea de Borgian (ALB)
 
 **Categoría:** `canal_telefonico`  
 **Palabras clave:** línea telefónica, atención automatizada, consultas, pagos, transferencias  
@@ -1154,7 +1154,7 @@ Opciones disponibles:
 
 **Categoría:** `canal_digital`  
 **Palabras clave:** banca en línea, portal web, transacciones digitales  
-**URL:** www.bankborjam.com.co  
+**URL:** www.borgianbank.com.co  
 **Disponibilidad:** 24/7
 
 ### Funcionalidades Principales
@@ -1196,7 +1196,7 @@ Opciones disponibles:
 **Categoría:** `canal_movil`  
 **Palabras clave:** app móvil, banca móvil, smartphone, transacciones seguras  
 **Plataformas:** iOS (App Store) y Android (Google Play)  
-**Nombre de la app:** Bank BorjaM Móvil
+**Nombre de la app:** Borgian Bank Móvil
 
 ### Características de Seguridad
 
@@ -1318,16 +1318,16 @@ Opciones disponibles:
 
 **Categoría:** `canal_cajeros`  
 **Palabras clave:** cajero automático, ATM, retiros, depósitos  
-**Red:** Servibanca y Red BorjaM
+**Red:** Servibanca y Red Borgian
 
 ### Red de Cajeros
 
-**Cajeros propios (Bank BorjaM):**
+**Cajeros propios (Bank Borgian):**
 
 - Sin costo por transacciones
 - Servicios completos disponibles
 
-**Red BorjaM (NuBank, Nequi, Falabella, Banco de Bogotá, Popular, AV Villas):**
+**Red Borgian (NuBank, Nequi, Falabella, Banco de Bogotá, Popular, AV Villas):**
 
 - Sin costo para cuentas nómina (según plan)
 - Transacciones limitadas según producto
@@ -1453,12 +1453,12 @@ Opciones disponibles:
 
 **Para posiciones laborales:**
 
-- **Correo:** TrabajaConNosotros@bankborjam.com.co
+- **Correo:** TrabajaConNosotros@borgianbank.com.co
 - **Asunto sugerido:** "Hoja de Vida - [Nombre] - [Cargo de Interés]"
 
 **Para prácticas profesionales o pasantías:**
 
-- **Correo:** PracticasConNosotros@bankborjam.com.co
+- **Correo:** PracticasConNosotros@borgianbank.com.co
 - **Asunto sugerido:** "Solicitud de Práctica - [Universidad] - [Carrera]"
 
 ### Información a Incluir en el CV
@@ -1556,15 +1556,15 @@ R:
 **P: ¿Cuál es el costo de las transferencias a otros bancos?**  
 R: 
 
-- Transferencias dentro del Grupo BorjaM: Sin costo
+- Transferencias dentro del Grupo Borgian: Sin costo
 - Transferencias ACH a otros bancos: Consultar tarifa vigente
 - PSE: Generalmente sin costo para el pagador
 
 **P: ¿Tiene costo el retiro de dinero en cajeros?**  
 R:
 
-- Cajeros propios (Banco BorjaM): Sin costo
-- Red BorjaM: Según plan de cuenta (algunos planes incluyen retiros gratis)
+- Cajeros propios (Borgian Bank): Sin costo
+- Red Borgian: Según plan de cuenta (algunos planes incluyen retiros gratis)
 - Otros bancos (Servibanca): Costo por transacción según tarifa vigente
 
 ---
@@ -1631,7 +1631,7 @@ Bonos emitidos por el Gobierno colombiano para financiar sus actividades.
 ## Marco Regulatorio Colombiano
 
 **Superintendencia Financiera de Colombia**  
-Entidad que vigila y controla las instituciones financieras en Colombia. El Banco BorjaM está vigilado por esta superintendencia.
+Entidad que vigila y controla las instituciones financieras en Colombia. Borgian Bank está vigilado por esta superintendencia.
 
 **FOGAFIN - Seguro de Depósitos**  
 
@@ -1667,10 +1667,10 @@ El banco implementa controles para:
 
 # SECCIÓN 13: INFORMACIÓN CONTEXTUAL ADICIONAL
 
-## 13.1 Sobre Bank BorjaM
+## 13.1 Sobre Borgian Bank
 
-**Nombre comercial:** Bank BorjaM  
-**Grupo empresarial:** Grupo BorjaM  
+**Nombre comercial:** Borgian Bank
+**Grupo empresarial:** Grupo Borgian  
 **Otros bancos del grupo:**
 
 - Banco de Bogotá
@@ -1694,7 +1694,7 @@ El banco implementa controles para:
 
 ✓ Portal transaccional web  
 ✓ Aplicación móvil  
-✓ Audio Línea de BorjaM (ALB) - línea automatizada  
+✓ Audio Línea de Borgian Bank (ALB) - línea automatizada  
 ✓ Cajeros automáticos  
 ✓ Consultas de saldo y movimientos  
 
